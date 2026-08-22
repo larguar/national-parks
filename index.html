@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>National Parks</title>
+<meta name="description" content="A map and poster of all 63 US National Parks, tracking which ones we've visited.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230a0c12'/%3E%3Cpath d='M12 78 40 26l14 22 10-14 24 44z' fill='%2335e0bc'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="progress" aria-hidden="true">
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="progress-bar griffin" id="progressBarGriffin"></div>
+  </div>
+
+  <div class="topbar-row">
+    <div class="stats" id="stats" aria-live="polite">
+      <div class="stat">
+        <span class="stat-num visited" id="statVisited">&ndash;</span>
+        <span class="stat-label">parks visited</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="statPct">&ndash;</span>
+        <span class="stat-label">of the list</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num griffin" id="statGriffin">&ndash;</span>
+        <span class="stat-label">with <span data-partner>Griffin</span></span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="segmented" role="group" aria-label="View">
+        <button class="seg is-active" data-view="map" type="button">Map</button>
+        <button class="seg" data-view="poster" type="button">Poster</button>
+      </div>
+      <div class="segmented" role="group" aria-label="Filter">
+        <button class="seg is-active" data-filter="all" type="button">All</button>
+        <button class="seg" data-filter="visited" type="button">Visited</button>
+        <button class="seg" data-filter="griffin" type="button">With <span data-partner>Griffin</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<header class="masthead">
+  <h1 id="siteTitle">National Parks</h1>
+  <p class="masthead-sub" id="siteSubtitle">of the United States</p>
+</header>
+
+<div class="notice" id="notice" hidden></div>
+
+<main>
+  <section id="mapView" class="view">
+    <div class="map-wrap">
+      <svg id="map" viewBox="0 0 1000 620" role="img" aria-label="Map of US National Parks">
+        <g id="statesLayer"></g>
+        <g id="insetLayer"></g>
+        <g id="parksLayer"></g>
+      </svg>
+    </div>
+    <ul class="legend">
+      <li><span class="dot visited"></span>Visited</li>
+      <li><span class="dot griffin"></span>Visited with <span data-partner>Griffin</span></li>
+      <li><span class="dot none"></span>Not yet</li>
+    </ul>
+  </section>
+
+  <section id="posterView" class="view" hidden>
+    <div class="poster-grid" id="posterGrid"></div>
+  </section>
+
+  <p class="empty" id="emptyState" hidden>Nothing here yet — no parks match this filter.</p>
+</main>
+
+<footer class="footer">
+  <button class="link-btn" id="refreshBtn" type="button">Refresh from spreadsheet</button>
+  <span class="dim" id="syncStatus"></span>
+</footer>
+
+<dialog id="detail" class="detail">
+  <button class="close" id="detailClose" type="button" aria-label="Close">&times;</button>
+  <div class="detail-body" id="detailBody"></div>
+</dialog>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data-states.js"></script>
+<script src="assets/js/data-parks.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
