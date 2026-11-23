@@ -158,6 +158,7 @@
         visited: true,
         griffin: trips.some(function (t) { return t.griffin; }),
         count: trips.length,
+        griffinCount: trips.filter(function (t) { return t.griffin; }).length,
         visits: trips,
         year: trips.map(function (t) { return t.year; }).filter(Boolean).join(", "),
         notes: trips.length === 1 ? trips[0].notes : ""
@@ -241,7 +242,10 @@
 
   /* ---------------- state per park ---------------- */
 
-  var NO_VISIT = { visited: false, griffin: false, count: 0, visits: [], year: "", notes: "" };
+  var NO_VISIT = { visited: false, griffin: false, count: 0, griffinCount: 0, visits: [], year: "", notes: "" };
+
+  // Visits that count in the current view: only the trips with Griffin in the With Griffin view.
+  function shownCount(v) { return state.filter === "griffin" ? v.griffinCount : v.count; }
   function statusOf(park) { return state.visits[park.id] || NO_VISIT; }
 
   function matchesFilter(park) {
@@ -298,7 +302,8 @@
       var g = $('.pin[data-id="' + p.id + '"]');
       if (!g) return;
       var v = statusOf(p);
-      var multi = v.count > 1;
+      var n = shownCount(v);
+      var multi = n > 1;
       g.classList.toggle("is-visited", v.visited && !v.griffin);
       g.classList.toggle("is-griffin", v.griffin);
       g.classList.toggle("is-multi", multi);
@@ -307,10 +312,11 @@
       g.querySelector(".pin-dot").setAttribute("r", multi ? 9 : 6);
       g.querySelector(".pin-ring").setAttribute("r", multi ? 13 : 10);
       g.querySelector(".pin-hit").setAttribute("r", multi ? 15 : 13);
-      g.querySelector(".pin-count").textContent = multi ? String(v.count) : "";
-      g.querySelector(".pin-label").textContent = p.name + (multi ? " · " + v.count + " visits" : "");
-      g.setAttribute("aria-label", p.fullName + (v.visited ? ", visited " + visitsPhrase(v.count) : ", not yet visited") +
-        (v.griffin ? ", with " + PARTNER : ""));
+      g.querySelector(".pin-count").textContent = multi ? String(n) : "";
+      g.querySelector(".pin-label").textContent = p.name + (multi ? " · " + n + " visits" : "");
+      g.setAttribute("aria-label", p.fullName + (!v.visited ? ", not yet visited"
+        : state.filter === "griffin" ? ", visited " + visitsPhrase(n) + " with " + PARTNER
+        : ", visited " + visitsPhrase(n) + (v.griffin ? ", with " + PARTNER : "")));
       g.hidden = !matchesFilter(p);
     });
   }
@@ -362,9 +368,10 @@
       var v = statusOf(p);
       tile.classList.toggle("is-visited", v.visited);
       tile.classList.toggle("is-griffin", v.griffin);
+      var n = shownCount(v);
       var count = tile.querySelector(".tile-visits");
-      count.textContent = v.count > 1 ? v.count + " visits" : "";
-      count.hidden = v.count < 2;
+      count.textContent = n > 1 ? n + " visits" : "";
+      count.hidden = n < 2;
       tile.hidden = !matchesFilter(p);
     });
   }
@@ -453,6 +460,7 @@
 
   function setFilter(filter) {
     state.filter = filter;
+    document.body.classList.toggle("filter-griffin", filter === "griffin");
     $$("[data-filter]").forEach(function (b) { b.classList.toggle("is-active", b.dataset.filter === filter); });
     try { localStorage.setItem("np-filter", filter); } catch (e) { }
     render();

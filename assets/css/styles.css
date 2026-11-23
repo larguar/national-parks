@@ -1,6 +1,6 @@
 /* ---------- palette ----------
    Sampled from the park badge art in assets/img/parks/. --forest is the green border every
-   badge shares (#3b4132), taken darker; --cream is the badge paper. --visited/--griffin pass
+   badge shares (#3b4132), deepened; --cream is the badge paper. --visited/--griffin pass
    WCAG AA (4.5:1) as text on white and on their 18% tints, and stay distinct under red-green
    color blindness. */
 :root{
@@ -15,9 +15,9 @@
   --ink-faint:#6c6f61;   /* 4.6:1 on cream */
   --shadow-ink:#2a2d26;  /* forest #323d30, desaturated */
 
-  --forest:#262d1a;      /* badge border, darkened */
-  --cream:#eae5cf;       /* badge paper; 11:1 on forest */
-  --cream-dim:#afae99;   /* secondary text on forest, 7:1 */
+  --forest:#344620;      /* badge border, darkened and saturated so it reads green, not black */
+  --cream:#eae5cf;       /* badge paper; 8.1:1 on forest */
+  --cream-dim:#bdbba6;   /* secondary text on forest, 5.3:1 */
 
   --visited:var(--forest);
   --griffin:#a24a2a;     /* terracotta */
@@ -214,6 +214,9 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
   background:var(--griffin);display:none;place-items:center;box-shadow:0 2px 6px -1px color-mix(in srgb,var(--griffin) 55%,transparent);
 }
 .tile.is-griffin .tile-badge{display:grid}
+/* In the With Griffin view every park is a Griffin park, so the marker adds nothing. */
+.filter-griffin .tile-badge,.filter-griffin .tile.is-griffin .tile-badge{display:none}
+.filter-griffin .pin.is-griffin .pin-ring{opacity:0}
 .tile-badge svg{width:14px;height:14px;fill:#ffffff}
 
 .empty{text-align:center;color:var(--ink-faint);padding:60px 0;font-size:15px}
