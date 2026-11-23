@@ -22,7 +22,8 @@
   --griffin:#a24a2a;     /* terracotta */
   --none:#69696960;
 
-  --radius:14px;
+  --radius:0;
+  --grid-gap:4px;        /* between poster cards */
 
 }
 
@@ -62,16 +63,22 @@ h1{
 }
 
 .controls{display:flex;flex-wrap:wrap;gap:8px}
-.segmented{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.segmented{position:relative;display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
 .seg{
+  position:relative;z-index:1;
   appearance:none;border:0;background:transparent;color:var(--ink-dim);
   font-size:14px;letter-spacing:.07em;text-transform:uppercase;
-  padding:6px 12px;border-radius:999px;cursor:pointer;transition:.18s;white-space:nowrap;
+  padding:6px 12px;border-radius:999px;cursor:pointer;transition:color .3s;white-space:nowrap;
 }
 .seg:hover{color:var(--ink)}
 .seg.is-active{background:var(--ink);color:#ffffff}
-.seg.is-active[data-filter="visited"]{background:var(--visited);color:#ffffff}
-.seg.is-active[data-filter="griffin"]{background:var(--griffin);color:#ffffff}
+/* One black pill per group (.seg-thumb, added by app.js) slides under the active option. */
+.segmented.has-thumb .seg.is-active{background:transparent}
+.seg-thumb{
+  position:absolute;top:3px;bottom:3px;left:0;width:0;border-radius:999px;background:var(--ink);
+  pointer-events:none;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),width .3s cubic-bezier(.2,.8,.2,1);
+}
 
 /* ---------- notice ---------- */
 .notice{
@@ -160,21 +167,30 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 /* filter + sort, under the title in the poster view */
 .poster-bar{display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:center;align-items:center;margin:0 0 24px}
 .sort{display:flex;align-items:center;gap:10px}
+/* native select (keyboard + screen reader support for free), restyled as a pill */
+.select{
+  appearance:none;-webkit-appearance:none;
+  font:inherit;font-size:14px;letter-spacing:.01em;color:var(--ink);
+  background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%231e1e1e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 15px center/11px 8px;
+  border:1px solid var(--line);border-radius:999px;
+  padding:9px 40px 9px 17px;line-height:1.2;cursor:pointer;transition:border-color .18s;
+}
+.select:hover{border-color:var(--line-strong)}
+.select:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .poster-bar .seg{text-transform:none;letter-spacing:.01em}
 .sort-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
 
-/* Column counts are divisors of 64 (2/4/8/16) so the full poster always ends on a complete row. */
+/* 2 / 4 / 6 columns. 2 and 4 divide 64 evenly; at 6 the last row holds 4. */
 .poster-grid{
   --cols:2;
-  display:grid;gap:12px;
+  display:grid;gap:var(--grid-gap);
   grid-template-columns:repeat(var(--cols),minmax(0,1fr));
 }
-@media (min-width:560px){.poster-grid{--cols:4}}
-@media (min-width:1200px){.poster-grid{--cols:8}}
-@media (min-width:2400px){.poster-grid{--cols:16}}
+@media (min-width:640px){.poster-grid{--cols:4}}
+@media (min-width:1200px){.poster-grid{--cols:6}}
 .tile{
   position:relative;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;
-  padding:28px 12px 14px;cursor:pointer;
+  padding:34px 16px 20px;cursor:pointer;
   background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
   color:inherit;font:inherit;
   transition:border-color .18s,background .18s;
@@ -186,9 +202,9 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 .tile-num{
   position:absolute;top:9px;left:11px;font-size:11px;line-height:1;color:var(--ink-faint);letter-spacing:.08em;
 }
-.tile-emblem{width:clamp(78px,62%,132px);height:auto;aspect-ratio:240/284;display:block;object-fit:contain;margin-bottom:4px;transition:filter .25s,opacity .25s}
-.tile-name{font-size:14px;font-weight:500;line-height:1.08}
-.tile-state{margin-top:-6px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+.tile-emblem{width:clamp(96px,56%,190px);height:auto;aspect-ratio:240/284;display:block;object-fit:contain;margin-bottom:4px;transition:filter .25s,opacity .25s}
+.tile-name{font-size:clamp(14px,1.3vw,17px);font-weight:500;line-height:1.08}
+.tile-state{margin-top:-6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
 .tile-visits{
   font-size:10px;letter-spacing:.12em;text-transform:uppercase;line-height:1;
   padding:4px 8px;border-radius:99px;color:var(--forest);
@@ -284,7 +300,8 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
   .poster-bar{flex-direction:column;align-items:stretch}
   .poster-bar .segmented{width:100%}
   .seg{flex:1;padding:7px 8px;font-size:13px}
-  .poster-grid{gap:9px}
+  .sort{width:100%}
+  .select{flex:1}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important}

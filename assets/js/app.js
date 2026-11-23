@@ -507,6 +507,7 @@
     $("#mapView").hidden = view !== "map";
     $("#posterView").hidden = view !== "poster";
     markActive("view", view);
+    placeThumbs();   // the poster's pills can't be measured while that view is hidden
     try { localStorage.setItem("np-view", view); } catch (e) { }
   }
 
@@ -515,6 +516,26 @@
       var on = b.dataset[attr] === value;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    placeThumbs();
+  }
+
+  // Slide each group's black pill under its active option. The first placement skips the
+  // animation so the pill doesn't sweep in from the left on page load.
+  function placeThumbs() {
+    $$(".segmented.has-thumb").forEach(function (group) {
+      var thumb = group.querySelector(".seg-thumb");
+      var active = group.querySelector(".seg.is-active");
+      if (!active || !active.offsetWidth) return;   // hidden view: placed when it's shown
+      var first = !thumb.dataset.placed;
+      if (first) thumb.style.transition = "none";
+      thumb.style.width = active.offsetWidth + "px";
+      thumb.style.transform = "translateX(" + active.offsetLeft + "px)";
+      if (first) {
+        void thumb.offsetWidth;   // commit the jump before turning the animation back on
+        thumb.style.transition = "";
+        thumb.dataset.placed = "1";
+      }
     });
   }
 
@@ -528,7 +549,7 @@
 
   function setSort(sort) {
     state.sort = sort;
-    markActive("sort", sort);
+    $("#sortSelect").value = sort;
     try { localStorage.setItem("np-sort", sort); } catch (e) { }
     paintPoster();
   }
@@ -541,15 +562,20 @@
     buildMap();
     buildPoster();
 
+    $$(".segmented").forEach(function (group) {
+      group.insertBefore(el("span", { "class": "seg-thumb", "aria-hidden": "true" }), group.firstChild);
+      group.classList.add("has-thumb");
+    });
+    window.addEventListener("resize", placeThumbs);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeThumbs);   // widths change once the webfont lands
+
     $$("[data-view]").forEach(function (b) {
       b.addEventListener("click", function () { setView(b.dataset.view); });
     });
     $$("[data-filter]").forEach(function (b) {
       b.addEventListener("click", function () { setFilter(b.dataset.filter); });
     });
-    $$("[data-sort]").forEach(function (b) {
-      b.addEventListener("click", function () { setSort(b.dataset.sort); });
-    });
+    $("#sortSelect").addEventListener("change", function (e) { setSort(e.target.value); });
     $("#detailClose").addEventListener("click", function () { $("#detail").close(); });
     $("#detail").addEventListener("click", function (e) {
       if (e.target === e.currentTarget) e.currentTarget.close();   // click on backdrop
@@ -564,7 +590,7 @@
     } catch (e) { }
     setView(savedView === "poster" ? "poster" : "map");
     state.sort = ["established", "visited"].indexOf(savedSort) > -1 ? savedSort : "az";
-    markActive("sort", state.sort);
+    $("#sortSelect").value = state.sort;
     setFilter(["visited", "griffin"].indexOf(savedFilter) > -1 ? savedFilter : "all");
 
     load();
