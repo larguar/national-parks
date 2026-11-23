@@ -23,7 +23,7 @@
   --none:#69696960;
 
   --radius:14px;
-  --shadow:0 18px 40px -24px var(--shadow-ink);
+
 }
 
 *{box-sizing:border-box}
@@ -70,8 +70,8 @@ h1{
 }
 .seg:hover{color:var(--ink)}
 .seg.is-active{background:var(--ink);color:#ffffff}
-.seg.is-active[data-filter="visited"]{background:var(--visited);color:#ffffff;box-shadow:0 0 18px -6px var(--visited)}
-.seg.is-active[data-filter="griffin"]{background:var(--griffin);color:#ffffff;box-shadow:0 0 18px -6px var(--griffin)}
+.seg.is-active[data-filter="visited"]{background:var(--visited);color:#ffffff}
+.seg.is-active[data-filter="griffin"]{background:var(--griffin);color:#ffffff}
 
 /* ---------- notice ---------- */
 .notice{
@@ -160,6 +160,7 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 /* filter + sort, under the title in the poster view */
 .poster-bar{display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:center;align-items:center;margin:0 0 24px}
 .sort{display:flex;align-items:center;gap:10px}
+.poster-bar .seg{text-transform:none;letter-spacing:.01em}
 .sort-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
 
 /* Column counts are divisors of 64 (2/4/8/16) so the full poster always ends on a complete row. */
@@ -176,9 +177,9 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
   padding:28px 12px 14px;cursor:pointer;
   background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
   color:inherit;font:inherit;
-  transition:transform .18s cubic-bezier(.2,.8,.2,1),border-color .18s,box-shadow .18s,background .18s;
+  transition:border-color .18s,background .18s;
 }
-.tile:hover,.tile:focus-visible{transform:translateY(-4px);border-color:var(--line-strong);outline:none}
+.tile:hover,.tile:focus-visible{border-color:var(--line-strong);outline:none}
 .tile:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .tile[hidden]{display:none}
 
@@ -206,11 +207,10 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 .tile:not(.is-visited) .tile-name{color:var(--ink-dim)}
 
 /* visited: plain white card, badge in full colour */
-.tile.is-visited .tile-emblem{filter:drop-shadow(0 3px 8px #0000002e)}
 
 .tile-badge{
   position:absolute;top:8px;right:9px;width:22px;height:22px;border-radius:99px;
-  background:var(--griffin);display:none;place-items:center;box-shadow:0 2px 6px -1px color-mix(in srgb,var(--griffin) 55%,transparent);
+  background:var(--griffin);display:none;place-items:center;
 }
 .tile.is-griffin .tile-badge{display:grid}
 /* In the With Griffin view every park is a Griffin park, so the marker adds nothing. */
@@ -260,7 +260,7 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
   background:var(--ink);color:#ffffff;font-weight:500;font-size:13px;
   padding:10px 16px;border-radius:99px;transition:.18s;
 }
-.d-link:hover{background:var(--visited);box-shadow:0 0 24px -6px var(--visited)}
+.d-link:hover{background:var(--visited)}
 
 /* ---------- footer ---------- */
 .footer{

@@ -4,8 +4,8 @@ A single-page site showing all 64 US National Parks two ways — an **interactiv
 **scratch-off-style poster** — with the visited/not-visited data read live from a Google Sheet
 you control.
 
-Toggles: **Map / Poster**. The poster view also has **All / Visited / With Griffin** and a sort:
-**A–Z**, **Established** or **Date visited**. Poster numbers always follow the order the parks were
+Toggles: **Poster / Map**. The poster view also has **All / Visited / With Griffin** and a sort:
+**A–Z**, **Date Established** or **Date Visited**. Poster numbers always follow the order the parks were
 established (Yellowstone is 01).
 
 Everything is static HTML, CSS and vanilla JS. No build step, no backend, no dependencies.
@@ -74,7 +74,7 @@ unvisited placeholder rows from the seed CSV can stay as they are.
 
 ### Date visited order
 
-The **Date visited** sort uses each park's first visit (first visit with Griffin in that view),
+The **Date Visited** sort uses each park's first visit (first visit with Griffin in that view),
 oldest first. Parks you saw in the same year are ordered A–Z unless the `Year` cell has a month or a
 full date, so for a multi-park trip, enter the date you reached each park, e.g. `6/12/2014`,
 `6/14/2014`. Undated visits come after the dated ones, and parks you haven't been to come last.
