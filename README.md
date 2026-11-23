@@ -104,8 +104,8 @@ Everything you'd want to change is at the top of `assets/js/config.js`: the mast
 subtitle, the partner name used on the third toggle, and the refresh interval.
 
 Colors live in the `:root` block at the top of `assets/css/styles.css`, taken from
-thenationalparkstore.com: `--bg` is their off-white page, `--forest` their green (visited tiles and
-map pins), and `--griffin` (terracotta) marks visits with Griffin.
+thenationalparkstore.com: `--bg` is their off-white page, `--forest` their green (map pins and
+visit counts), and `--griffin` (terracotta) marks visits with Griffin.
 
 ---
 

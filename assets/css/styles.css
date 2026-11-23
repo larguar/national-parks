@@ -17,8 +17,6 @@
 
   --forest:#244d3c;      /* store green */
   --forest-deep:#142a21; /* store green, hover */
-  --on-forest:#ffffff;   /* 9.5:1 */
-  --on-forest-dim:#c3d1ca; /* 6:1 */
 
   --visited:var(--forest);
   --griffin:#a24a2a;     /* terracotta */
@@ -187,8 +185,8 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 .tile-state{margin-top:-6px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
 .tile-visits{
   font-size:10px;letter-spacing:.12em;text-transform:uppercase;line-height:1;
-  padding:4px 8px;border-radius:99px;color:var(--on-forest);
-  background:color-mix(in srgb,var(--on-forest) 14%,transparent);
+  padding:4px 8px;border-radius:99px;color:var(--forest);
+  background:color-mix(in srgb,var(--forest) 10%,transparent);
 }
 .tile-visits[hidden]{display:none}
 
@@ -202,14 +200,8 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 }
 .tile:not(.is-visited) .tile-name{color:var(--ink-dim)}
 
-/* visited: full colour */
-/* visited: solid store green */
-.tile.is-visited{
-  background:var(--forest);border-color:var(--forest);color:var(--on-forest);
-}
-.tile.is-visited .tile-num,.tile.is-visited .tile-state{color:var(--on-forest-dim)}
-.tile.is-visited .tile-emblem{filter:drop-shadow(0 4px 10px #00000059)}
-.tile.is-visited:hover,.tile.is-visited:focus-visible{background:var(--forest-deep);border-color:var(--forest-deep);box-shadow:0 16px 30px -16px var(--forest-deep)}
+/* visited: plain white card, badge in full colour */
+.tile.is-visited .tile-emblem{filter:drop-shadow(0 3px 8px #0000002e)}
 
 .tile-badge{
   position:absolute;top:8px;right:9px;width:22px;height:22px;border-radius:99px;
