@@ -3,13 +3,12 @@
 
   var CFG = window.CONFIG || {};
   var PARKS = window.PARKS || [];
-  var ICONS = window.PARK_ICONS || {};
   var PARTNER = CFG.PARTNER_NAME || "Griffin";
 
   var state = {
     view: "map",
     filter: "all",
-    visits: {},          // park id -> {visited, griffin, year, notes}
+    visits: {},          // park id -> {visited, griffin, count, visits: [{year, griffin, notes}], year, notes}
     loaded: false
   };
 
@@ -80,7 +79,9 @@
   PARKS.forEach(function (p) {
     [p.name, p.fullName, p.id].forEach(function (label) {
       var key = normalize(label);
-      if (key) (lookup[key] = lookup[key] || []).push(p.id);
+      if (!key) return;
+      var ids = lookup[key] = lookup[key] || [];
+      if (ids.indexOf(p.id) === -1) ids.push(p.id);   // name/fullName/id often normalize alike
     });
   });
   // A few ways people write these in a spreadsheet.
@@ -122,9 +123,11 @@
     };
   }
 
+  // Each row is one visit. A park can appear on several rows (one per trip); rows with
+  // neither box ticked are the unvisited placeholders from the seed checklist.
   function applyRows(rows) {
-    var visits = {}, unmatched = [];
-    if (!rows.length) return { visits: visits, unmatched: unmatched };
+    var byPark = {}, unmatched = [];
+    if (!rows.length) return { visits: {}, unmatched: unmatched };
     var cols = columnIndexes(rows[0]);
 
     rows.slice(1).forEach(function (r) {
@@ -133,15 +136,32 @@
       var ids = lookup[normalize(raw)];
       if (!ids) { unmatched.push(raw); return; }
       var griffin = cols.griffin > -1 && isTruthy(r[cols.griffin]);
-      var visited = cols.visited > -1 ? isTruthy(r[cols.visited]) : griffin;
-      ids.forEach(function (id) {
-        visits[id] = {
-          visited: visited || griffin,   // with-partner implies visited
-          griffin: griffin,
-          year: cols.year > -1 ? (r[cols.year] || "").trim() : "",
-          notes: cols.notes > -1 ? (r[cols.notes] || "").trim() : ""
-        };
+      var visited = (cols.visited > -1 && isTruthy(r[cols.visited])) || griffin;   // with-partner implies visited
+      if (!visited) return;
+      var trip = {
+        year: cols.year > -1 ? (r[cols.year] || "").trim() : "",
+        griffin: griffin,
+        notes: cols.notes > -1 ? (r[cols.notes] || "").trim() : ""
+      };
+      ids.forEach(function (id) { (byPark[id] = byPark[id] || []).push(trip); });
+    });
+
+    var visits = {};
+    Object.keys(byPark).forEach(function (id) {
+      var trips = byPark[id].slice().sort(function (a, b) {
+        var ya = parseInt(a.year, 10), yb = parseInt(b.year, 10);
+        if (isNaN(ya)) return isNaN(yb) ? 0 : 1;   // undated visits last
+        if (isNaN(yb)) return -1;
+        return ya - yb;
       });
+      visits[id] = {
+        visited: true,
+        griffin: trips.some(function (t) { return t.griffin; }),
+        count: trips.length,
+        visits: trips,
+        year: trips.map(function (t) { return t.year; }).filter(Boolean).join(", "),
+        notes: trips.length === 1 ? trips[0].notes : ""
+      };
     });
     return { visits: visits, unmatched: unmatched };
   }
@@ -221,7 +241,7 @@
 
   /* ---------------- state per park ---------------- */
 
-  var NO_VISIT = { visited: false, griffin: false, year: "", notes: "" };
+  var NO_VISIT = { visited: false, griffin: false, count: 0, visits: [], year: "", notes: "" };
   function statusOf(park) { return state.visits[park.id] || NO_VISIT; }
 
   function matchesFilter(park) {
@@ -262,6 +282,7 @@
         el("circle", { cx: p.x, cy: p.y, r: 13, "class": "pin-hit" }),
         el("circle", { cx: p.x, cy: p.y, r: 10, "class": "pin-ring" }),
         el("circle", { cx: p.x, cy: p.y, r: 6, "class": "pin-dot" }),
+        el("text", { x: p.x, y: p.y, "text-anchor": "middle", "dominant-baseline": "central", "class": "pin-count", "aria-hidden": "true" }),
         el("text", { x: p.x, y: p.y - 15, "text-anchor": "middle", "class": "pin-label" }, [p.name])
       ]);
       g.addEventListener("click", function () { openDetail(p); });
@@ -277,18 +298,38 @@
       var g = $('.pin[data-id="' + p.id + '"]');
       if (!g) return;
       var v = statusOf(p);
+      var multi = v.count > 1;
       g.classList.toggle("is-visited", v.visited && !v.griffin);
       g.classList.toggle("is-griffin", v.griffin);
+      g.classList.toggle("is-multi", multi);
+      // Repeat visits get a bigger dot with the count inside it. Radii are also set in CSS
+      // (for the hover grow); the attributes cover browsers without CSS geometry support.
+      g.querySelector(".pin-dot").setAttribute("r", multi ? 9 : 6);
+      g.querySelector(".pin-ring").setAttribute("r", multi ? 13 : 10);
+      g.querySelector(".pin-hit").setAttribute("r", multi ? 15 : 13);
+      g.querySelector(".pin-count").textContent = multi ? String(v.count) : "";
+      g.querySelector(".pin-label").textContent = p.name + (multi ? " · " + v.count + " visits" : "");
+      g.setAttribute("aria-label", p.fullName + (v.visited ? ", visited " + visitsPhrase(v.count) : ", not yet visited") +
+        (v.griffin ? ", with " + PARTNER : ""));
       g.hidden = !matchesFilter(p);
     });
   }
 
+  function visitsPhrase(n) { return n === 1 ? "once" : n === 2 ? "twice" : n + " times"; }
+
   /* ---------------- poster ---------------- */
 
+  // Badge art from thenationalparkstore.com/pages/shop-by-park, one WebP per park id.
   function emblem(park, cls) {
-    var svg = el("svg", { viewBox: "0 0 100 100", "class": cls, "aria-hidden": "true" });
-    svg.innerHTML = ICONS[park.id] || "";
-    return svg;
+    var img = document.createElement("img");
+    img.className = cls;
+    img.src = "assets/img/parks/" + park.id + ".webp";
+    img.alt = "";
+    img.width = 240;
+    img.height = 284;
+    img.loading = "lazy";
+    img.decoding = "async";
+    return img;
   }
 
   var PARTNER_GLYPH =
@@ -304,7 +345,8 @@
         el("span", { "class": "tile-num" }, [String(i + 1).padStart(2, "0")]),
         emblem(p, "tile-emblem"),
         el("span", { "class": "tile-name" }, [p.name]),
-        el("span", { "class": "tile-state" }, [p.abbr.join(" · ")])
+        el("span", { "class": "tile-state" }, [p.abbr.join(" · ")]),
+        el("span", { "class": "tile-visits", hidden: "" })
       ]);
       var badge = el("span", { "class": "tile-badge", title: "Visited with " + PARTNER });
       badge.innerHTML = PARTNER_GLYPH;
@@ -321,6 +363,9 @@
       var v = statusOf(p);
       tile.classList.toggle("is-visited", v.visited);
       tile.classList.toggle("is-griffin", v.griffin);
+      var count = tile.querySelector(".tile-visits");
+      count.textContent = v.count > 1 ? v.count + " visits" : "";
+      count.hidden = v.count < 2;
       tile.hidden = !matchesFilter(p);
     });
   }
@@ -349,25 +394,33 @@
 
     body.innerHTML = "";
     body.style.setProperty("--accent", accent);
-    body.style.setProperty("--c1", v.visited ? accent : "#3d4661");
-    body.style.setProperty("--c2", v.visited ? "color-mix(in srgb," + accent + " 55%,#0b0e15)" : "#2f3648");
-    body.style.setProperty("--c3", v.visited ? "color-mix(in srgb," + accent + " 26%,#0a0d14)" : "#232a3a");
-    body.style.setProperty("--c4", v.visited ? "#f6f8ff" : "#525d78");
 
     body.appendChild(el("div", { "class": "d-head" }, [
-      emblem(park, "d-emblem"),
+      emblem(park, v.visited ? "d-emblem" : "d-emblem is-dim"),
       el("div", {}, [
         el("h3", { "class": "d-title" }, [park.name]),
         el("p", { "class": "d-sub" }, [park.states.join(" · ")])
       ])
     ]));
 
+    var multi = v.count > 1;
     var tags = el("div", { "class": "d-tags" }, [
-      el("span", { "class": "tag" + (v.visited ? " on" : "") }, [v.visited ? "Visited" : "Not yet"]),
+      el("span", { "class": "tag" + (v.visited ? " on" : "") },
+        [!v.visited ? "Not yet" : multi ? "Visited " + visitsPhrase(v.count) : "Visited"]),
       el("span", { "class": "tag" + (v.griffin ? " on g" : "") }, [(v.griffin ? "With " : "Without ") + PARTNER])
     ]);
-    if (v.year) tags.appendChild(el("span", { "class": "tag" }, [v.year]));
+    if (v.year && !multi) tags.appendChild(el("span", { "class": "tag" }, [v.year]));
     body.appendChild(tags);
+
+    if (multi) {
+      body.appendChild(el("ol", { "class": "d-visits" }, v.visits.map(function (t) {
+        return el("li", { "class": t.griffin ? "is-griffin" : "" }, [
+          el("span", { "class": "d-visit-year" }, [t.year || "Year unknown"]),
+          el("span", { "class": "d-visit-who" }, [t.griffin ? "With " + PARTNER : ""]),
+          t.notes ? el("span", { "class": "d-visit-note" }, [t.notes]) : ""
+        ]);
+      })));
+    }
 
     body.appendChild(el("dl", { "class": "d-rows" }, [
       el("dt", {}, ["Established"]), el("dd", {}, [park.established]),
