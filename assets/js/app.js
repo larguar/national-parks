@@ -7,7 +7,8 @@
 
   var state = {
     view: "map",
-    filter: "all",
+    filter: "all",       // poster only
+    sort: "az",          // poster only: az | established | visited
     visits: {},          // park id -> {visited, griffin, count, visits: [{year, griffin, notes}], year, notes}
     loaded: false
   };
@@ -33,6 +34,31 @@
   }
 
   function num(n) { return n.toLocaleString("en-US"); }
+
+  // Turn "2014", "6/14/2014", "2014-06-14", "June 2014" or "June 14, 2014" into a sortable
+  // number (yyyymmdd, with 00 for an unknown month or day). Anything else with a 4-digit year
+  // still sorts by that year. Returns null when there's no year at all.
+  var MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  function dateKey(text) {
+    var s = (text || "").trim(), m;
+    var key = function (y, mo, d) { return y * 10000 + (mo || 0) * 100 + (d || 0); };
+    if (!s) return null;
+    if ((m = s.match(/^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?/))) return key(+m[1], +m[2], +m[3]);
+    if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}|\d{2})\b/))) return key(m[3].length === 2 ? 2000 + +m[3] : +m[3], +m[1], +m[2]);
+    if ((m = s.match(/^(\d{1,2})\/(\d{4})\b/))) return key(+m[2], +m[1], 0);
+    if ((m = s.match(/([a-z]{3,})\.?\s+(?:(\d{1,2})(?:st|nd|rd|th)?,?\s+)?(\d{4})/i))) {
+      var mo = MONTHS.indexOf(m[1].slice(0, 3).toLowerCase()) + 1;
+      if (mo) return key(+m[3], mo, +m[2]);
+    }
+    if ((m = s.match(/\b(1[89]\d\d|20\d\d)\b/))) return key(+m[1], 0, 0);
+    return null;
+  }
+
+  // Poster numbers follow the order the parks were established; same-day parks go A-Z.
+  var RANK = {};
+  PARKS.map(function (p, i) { return { id: p.id, key: dateKey(p.established) || p.year * 10000, i: i }; })
+    .sort(function (a, b) { return a.key - b.key || a.i - b.i; })
+    .forEach(function (p, n) { RANK[p.id] = n + 1; });
 
   /* ---------------- CSV ---------------- */
 
@@ -149,16 +175,19 @@
     var visits = {};
     Object.keys(byPark).forEach(function (id) {
       var trips = byPark[id].slice().sort(function (a, b) {
-        var ya = parseInt(a.year, 10), yb = parseInt(b.year, 10);
-        if (isNaN(ya)) return isNaN(yb) ? 0 : 1;   // undated visits last
-        if (isNaN(yb)) return -1;
-        return ya - yb;
+        var ka = dateKey(a.year), kb = dateKey(b.year);
+        if (ka === null) return kb === null ? 0 : 1;   // undated visits last
+        if (kb === null) return -1;
+        return ka - kb;
       });
+      var griffinTrips = trips.filter(function (t) { return t.griffin; });
       visits[id] = {
         visited: true,
         griffin: trips.some(function (t) { return t.griffin; }),
         count: trips.length,
-        griffinCount: trips.filter(function (t) { return t.griffin; }).length,
+        griffinCount: griffinTrips.length,
+        firstKey: dateKey(trips[0].year),
+        firstGriffinKey: griffinTrips.length ? dateKey(griffinTrips[0].year) : null,
         visits: trips,
         year: trips.map(function (t) { return t.year; }).filter(Boolean).join(", "),
         notes: trips.length === 1 ? trips[0].notes : ""
@@ -242,9 +271,9 @@
 
   /* ---------------- state per park ---------------- */
 
-  var NO_VISIT = { visited: false, griffin: false, count: 0, griffinCount: 0, visits: [], year: "", notes: "" };
+  var NO_VISIT = { visited: false, griffin: false, count: 0, griffinCount: 0, firstKey: null, firstGriffinKey: null, visits: [], year: "", notes: "" };
 
-  // Visits that count in the current view: only the trips with Griffin in the With Griffin view.
+  // Visits that count on the poster: only the trips with Griffin in the With Griffin view.
   function shownCount(v) { return state.filter === "griffin" ? v.griffinCount : v.count; }
   function statusOf(park) { return state.visits[park.id] || NO_VISIT; }
 
@@ -302,7 +331,7 @@
       var g = $('.pin[data-id="' + p.id + '"]');
       if (!g) return;
       var v = statusOf(p);
-      var n = shownCount(v);
+      var n = v.count;
       var multi = n > 1;
       g.classList.toggle("is-visited", v.visited && !v.griffin);
       g.classList.toggle("is-griffin", v.griffin);
@@ -315,9 +344,7 @@
       g.querySelector(".pin-count").textContent = multi ? String(n) : "";
       g.querySelector(".pin-label").textContent = p.name + (multi ? " · " + n + " visits" : "");
       g.setAttribute("aria-label", p.fullName + (!v.visited ? ", not yet visited"
-        : state.filter === "griffin" ? ", visited " + visitsPhrase(n) + " with " + PARTNER
         : ", visited " + visitsPhrase(n) + (v.griffin ? ", with " + PARTNER : "")));
-      g.hidden = !matchesFilter(p);
     });
   }
 
@@ -343,11 +370,11 @@
 
   function buildPoster() {
     var grid = $("#posterGrid");
-    PARKS.forEach(function (p, i) {
+    PARKS.forEach(function (p) {
       var tile = el("button", {
         type: "button", "class": "tile", "data-id": p.id
       }, [
-        el("span", { "class": "tile-num" }, [String(i + 1).padStart(2, "0")]),
+        el("span", { "class": "tile-num", title: "Established " + p.established }, [String(RANK[p.id]).padStart(2, "0")]),
         emblem(p, "tile-emblem"),
         el("span", { "class": "tile-name" }, [p.name]),
         el("span", { "class": "tile-state" }, [p.abbr.join(" · ")]),
@@ -374,6 +401,31 @@
       count.hidden = n < 2;
       tile.hidden = !matchesFilter(p);
     });
+
+    var grid = $("#posterGrid");
+    PARKS.slice().sort(sortCompare).forEach(function (p) {
+      grid.appendChild($('.tile[data-id="' + p.id + '"]'));   // moves it; no rebuild
+    });
+  }
+
+  // A-Z is the data order. "Visited" goes by first visit (first visit with Griffin in that
+  // view), oldest first; undated visits follow the dated ones, then the parks not yet visited.
+  var ORDER = {};
+  PARKS.forEach(function (p, i) { ORDER[p.id] = i; });
+  function sortCompare(a, b) {
+    if (state.sort === "established") return RANK[a.id] - RANK[b.id];
+    if (state.sort === "visited") {
+      var ka = visitKey(a), kb = visitKey(b);
+      if (ka !== kb) return ka - kb;
+    }
+    return ORDER[a.id] - ORDER[b.id];
+  }
+  function visitKey(p) {
+    var v = statusOf(p);
+    var griffinView = state.filter === "griffin";
+    if (!(griffinView ? v.griffin : v.visited)) return Infinity;
+    var k = griffinView ? v.firstGriffinKey : v.firstKey;
+    return k === null ? 1e9 : k;
   }
 
   /* ---------------- stats ---------------- */
@@ -427,7 +479,7 @@
     }
 
     body.appendChild(el("dl", { "class": "d-rows" }, [
-      el("dt", {}, ["Established"]), el("dd", {}, [park.established]),
+      el("dt", {}, ["Established"]), el("dd", {}, [park.established + " · No. " + RANK[park.id] + " of " + PARKS.length]),
       el("dt", {}, ["Area"]), el("dd", {}, [num(Math.round(park.acres)) + " acres (" + num(km2) + " km²)"]),
       el("dt", {}, ["Visitors"]), el("dd", {}, [num(park.visitors) + " in 2025"])
     ]));
@@ -454,16 +506,31 @@
     state.view = view;
     $("#mapView").hidden = view !== "map";
     $("#posterView").hidden = view !== "poster";
-    $$("[data-view]").forEach(function (b) { b.classList.toggle("is-active", b.dataset.view === view); });
+    markActive("view", view);
     try { localStorage.setItem("np-view", view); } catch (e) { }
+  }
+
+  function markActive(attr, value) {
+    $$("[data-" + attr + "]").forEach(function (b) {
+      var on = b.dataset[attr] === value;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
   }
 
   function setFilter(filter) {
     state.filter = filter;
     document.body.classList.toggle("filter-griffin", filter === "griffin");
-    $$("[data-filter]").forEach(function (b) { b.classList.toggle("is-active", b.dataset.filter === filter); });
+    markActive("filter", filter);
     try { localStorage.setItem("np-filter", filter); } catch (e) { }
     render();
+  }
+
+  function setSort(sort) {
+    state.sort = sort;
+    markActive("sort", sort);
+    try { localStorage.setItem("np-sort", sort); } catch (e) { }
+    paintPoster();
   }
 
   function init() {
@@ -480,15 +547,24 @@
     $$("[data-filter]").forEach(function (b) {
       b.addEventListener("click", function () { setFilter(b.dataset.filter); });
     });
+    $$("[data-sort]").forEach(function (b) {
+      b.addEventListener("click", function () { setSort(b.dataset.sort); });
+    });
     $("#detailClose").addEventListener("click", function () { $("#detail").close(); });
     $("#detail").addEventListener("click", function (e) {
       if (e.target === e.currentTarget) e.currentTarget.close();   // click on backdrop
     });
     $("#refreshBtn").addEventListener("click", load);
 
-    var savedView, savedFilter;
-    try { savedView = localStorage.getItem("np-view"); savedFilter = localStorage.getItem("np-filter"); } catch (e) { }
+    var savedView, savedFilter, savedSort;
+    try {
+      savedView = localStorage.getItem("np-view");
+      savedFilter = localStorage.getItem("np-filter");
+      savedSort = localStorage.getItem("np-sort");
+    } catch (e) { }
     setView(savedView === "poster" ? "poster" : "map");
+    state.sort = ["established", "visited"].indexOf(savedSort) > -1 ? savedSort : "az";
+    markActive("sort", state.sort);
     setFilter(["visited", "griffin"].indexOf(savedFilter) > -1 ? savedFilter : "all");
 
     load();

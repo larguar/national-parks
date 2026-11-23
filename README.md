@@ -4,7 +4,9 @@ A single-page site showing all 64 US National Parks two ways — an **interactiv
 **scratch-off-style poster** — with the visited/not-visited data read live from a Google Sheet
 you control.
 
-Toggles: **Map / Poster** and **All / Visited / With Griffin**.
+Toggles: **Map / Poster**. The poster view also has **All / Visited / With Griffin** and a sort:
+**A–Z**, **Established** or **Date visited**. Poster numbers always follow the order the parks were
+established (Yellowstone is 01).
 
 Everything is static HTML, CSS and vanilla JS. No build step, no backend, no dependencies.
 
@@ -48,7 +50,7 @@ Only the park name matters for position; the rest are found by keyword, in any o
 | `Park` | `park` or `name` | Must match the official name — the seed CSV has them all |
 | `Visited` | contains `visit`/`been`/`seen` | |
 | `Visited With Griffin` | contains the partner name | Implies visited, even if the other box is blank |
-| `Year` | contains `year`/`date`/`when` | Optional, shown on the park's card |
+| `Year` | contains `year`/`date`/`when` | Optional. A year, or a full date (`6/14/2014`, `2014-06-14`, `June 2014`) to order trips within a year |
 | `Notes` | contains `note`/`comment` | Optional, shown on the park's card |
 
 Extra columns are ignored, so add whatever else you like. If a row's park name can't be matched,
@@ -69,6 +71,13 @@ The park counts as visited with Griffin if any of its rows is. On the map, a par
 than once gets a larger pin with the count inside it; the poster tile shows "3 visits", and the
 park's card lists every trip in year order. Rows with neither box ticked are ignored, so the
 unvisited placeholder rows from the seed CSV can stay as they are.
+
+### Date visited order
+
+The **Date visited** sort uses each park's first visit (first visit with Griffin in that view),
+oldest first. Parks you saw in the same year are ordered A–Z unless the `Year` cell has a month or a
+full date, so for a multi-park trip, enter the date you reached each park, e.g. `6/12/2014`,
+`6/14/2014`. Undated visits come after the dated ones, and parks you haven't been to come last.
 
 ## 2. Publish it
 

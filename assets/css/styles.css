@@ -157,6 +157,11 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 }
 
 /* poster */
+/* filter + sort, under the title in the poster view */
+.poster-bar{display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:center;align-items:center;margin:0 0 24px}
+.sort{display:flex;align-items:center;gap:10px}
+.sort-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+
 /* Column counts are divisors of 64 (2/4/8/16) so the full poster always ends on a complete row. */
 .poster-grid{
   --cols:2;
@@ -210,7 +215,6 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 .tile.is-griffin .tile-badge{display:grid}
 /* In the With Griffin view every park is a Griffin park, so the marker adds nothing. */
 .filter-griffin .tile-badge,.filter-griffin .tile.is-griffin .tile-badge{display:none}
-.filter-griffin .pin.is-griffin .pin-ring{opacity:0}
 .tile-badge svg{width:14px;height:14px;fill:#ffffff}
 
 .empty{text-align:center;color:var(--ink-faint);padding:60px 0;font-size:15px}
@@ -277,6 +281,8 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
   .stat-label{font-size:9px;letter-spacing:.1em}
   .controls{width:100%}
   .segmented{flex:1}
+  .poster-bar{flex-direction:column;align-items:stretch}
+  .poster-bar .segmented{width:100%}
   .seg{flex:1;padding:7px 8px;font-size:13px}
   .poster-grid{gap:9px}
 }
