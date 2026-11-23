@@ -339,8 +339,7 @@
     var grid = $("#posterGrid");
     PARKS.forEach(function (p, i) {
       var tile = el("button", {
-        type: "button", "class": "tile", "data-id": p.id,
-        style: "--accent:var(--r-" + p.region + ")"
+        type: "button", "class": "tile", "data-id": p.id
       }, [
         el("span", { "class": "tile-num" }, [String(i + 1).padStart(2, "0")]),
         emblem(p, "tile-emblem"),
@@ -390,10 +389,8 @@
     var dlg = $("#detail");
     var body = $("#detailBody");
     var km2 = Math.round(park.acres * 0.00404686);
-    var accent = "var(--r-" + park.region + ")";
 
     body.innerHTML = "";
-    body.style.setProperty("--accent", accent);
 
     body.appendChild(el("div", { "class": "d-head" }, [
       emblem(park, v.visited ? "d-emblem" : "d-emblem is-dim"),

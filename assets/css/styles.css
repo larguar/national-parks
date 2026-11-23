@@ -1,7 +1,8 @@
 /* ---------- palette ----------
-   Sampled from the park badge art in assets/img/parks/, then saturated and spread apart for
-   contrast. --visited/--griffin pass WCAG AA (4.5:1) as text on white and on their 18% tints,
-   and stay distinct under red-green color blindness. */
+   Sampled from the park badge art in assets/img/parks/. --forest is the green border every
+   badge shares (#3b4132), taken darker; --cream is the badge paper. --visited/--griffin pass
+   WCAG AA (4.5:1) as text on white and on their 18% tints, and stay distinct under red-green
+   color blindness. */
 :root{
   --bg:#ffffff;
   --bg-2:#f5f3ec;        /* cream paper, lightened */
@@ -14,19 +15,13 @@
   --ink-faint:#6c6f61;   /* 4.6:1 on cream */
   --shadow-ink:#2a2d26;  /* forest #323d30, desaturated */
 
-  --visited:#2b6858;     /* evergreen teal */
+  --forest:#262d1a;      /* badge border, darkened */
+  --cream:#eae5cf;       /* badge paper; 11:1 on forest */
+  --cream-dim:#afae99;   /* secondary text on forest, 7:1 */
+
+  --visited:var(--forest);
   --griffin:#a24a2a;     /* terracotta */
   --none:#6c6f6160;
-
-  /* region accents, used to tint visited poster tiles */
-  --r-alaska:#3f6e9a;     /* glacier */
-  --r-pacific:#2e9187;    /* sea */
-  --r-california:#cc9d2c; /* ochre */
-  --r-southwest:#7f3b30;  /* red rock */
-  --r-rockies:#355f44;    /* evergreen */
-  --r-plains:#dc8a52;     /* sandstone */
-  --r-east:#88983a;       /* olive */
-  --r-tropics:#6cbb95;    /* sage */
 
   --radius:14px;
   --shadow:0 18px 40px -24px var(--shadow-ink);
@@ -179,6 +174,7 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
   transition:transform .18s cubic-bezier(.2,.8,.2,1),border-color .18s,box-shadow .18s,background .18s;
 }
 .tile:hover,.tile:focus-visible{transform:translateY(-4px);border-color:var(--line-strong);outline:none}
+.tile:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .tile[hidden]{display:none}
 
 .tile-num{
@@ -189,10 +185,9 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 .tile-state{margin-top:-6px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
 .tile-visits{
   font-size:10px;letter-spacing:.12em;text-transform:uppercase;line-height:1;
-  padding:4px 8px;border-radius:99px;color:var(--visited);
-  background:color-mix(in srgb,var(--visited) 12%,transparent);
+  padding:4px 8px;border-radius:99px;color:var(--cream);
+  background:color-mix(in srgb,var(--cream) 14%,transparent);
 }
-.tile.is-griffin .tile-visits{color:var(--griffin);background:color-mix(in srgb,var(--griffin) 12%,transparent)}
 .tile-visits[hidden]{display:none}
 
 /* unvisited: dim, flat, foil-ish */
@@ -206,13 +201,13 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 .tile:not(.is-visited) .tile-name{color:var(--ink-dim)}
 
 /* visited: full colour */
+/* visited: solid forest green, like the badges' own border */
 .tile.is-visited{
-  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 10%,var(--panel)),var(--panel));
-  border-color:color-mix(in srgb,var(--accent) 40%,var(--line));
-  box-shadow:inset 0 0 30px -14px var(--accent);
+  background:var(--forest);border-color:var(--forest);color:var(--cream);
 }
-.tile.is-visited .tile-emblem{filter:drop-shadow(0 3px 12px color-mix(in srgb,var(--accent) 45%,transparent))}
-.tile.is-visited:hover{box-shadow:0 14px 30px -18px var(--accent),inset 0 0 30px -14px var(--accent)}
+.tile.is-visited .tile-num,.tile.is-visited .tile-state{color:var(--cream-dim)}
+.tile.is-visited .tile-emblem{filter:drop-shadow(0 4px 10px #00000059)}
+.tile.is-visited:hover,.tile.is-visited:focus-visible{border-color:var(--forest);box-shadow:0 16px 30px -16px var(--forest)}
 
 .tile-badge{
   position:absolute;top:8px;right:9px;width:22px;height:22px;border-radius:99px;
@@ -247,7 +242,7 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
 .d-rows dt{color:var(--ink-faint);font-size:12px;letter-spacing:.1em;text-transform:uppercase;align-self:center}
 .d-rows dd{margin:0}
 .d-note{
-  background:var(--panel-2);border-left:3px solid var(--accent,var(--visited));
+  background:var(--panel-2);border-left:3px solid var(--visited);
   padding:11px 14px;border-radius:0 10px 10px 0;font-size:14px;color:var(--ink-dim);margin:0 0 18px;line-height:1.5;
 }
 .d-visits{list-style:none;margin:0 0 20px;padding:0;border-top:1px solid var(--line)}
@@ -264,7 +259,7 @@ main{padding:26px clamp(16px,4vw,40px) 40px}
   background:var(--ink);color:#ffffff;font-weight:500;font-size:13px;
   padding:10px 16px;border-radius:99px;transition:.18s;
 }
-.d-link:hover{background:var(--accent);box-shadow:0 0 24px -6px var(--accent)}
+.d-link:hover{background:var(--visited);box-shadow:0 0 24px -6px var(--visited)}
 
 /* ---------- footer ---------- */
 .footer{

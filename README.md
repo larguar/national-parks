@@ -103,9 +103,9 @@ against `parks-seed.csv`. Unmatched rows are listed in a banner at the top of th
 Everything you'd want to change is at the top of `assets/js/config.js`: the masthead title and
 subtitle, the partner name used on the third toggle, and the refresh interval.
 
-Colors live in the `:root` block at the top of `assets/css/styles.css` — `--visited` (evergreen teal) and
-`--griffin` (terracotta) drive the map and stats, and the eight `--r-*` region colors tint the poster
-tiles.
+Colors live in the `:root` block at the top of `assets/css/styles.css`. `--forest` (the badges'
+border green, darkened) fills visited tiles and map pins, and `--griffin` (terracotta) marks
+visits with Griffin.
 
 ---
 
